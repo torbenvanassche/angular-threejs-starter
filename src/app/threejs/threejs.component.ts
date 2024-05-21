@@ -40,7 +40,7 @@ export class ThreejsComponent implements OnInit {
 
       // Set up OrbitControls
       this.controls = new OrbitControls(glb.cameras[0], this.renderer.domElement);
-      that.loadEXRFromGLB(glb).then(function(env: any) {
+      this.loadEXRFromGLB(glb).then(function(env: any) {
         that.scene.environment = env.texture;
       });
 
@@ -65,37 +65,28 @@ export class ThreejsComponent implements OnInit {
     }
   }
 
-  loadEXRFromGLB = (glb: any) => {
-    var image = glb.parser.json.images.filter(function (data: any) {
-      return data.mimeType === "image/x-exr";
-    })
+  private loadEXRFromGLB(glb: any) {
+    const image = glb.parser.json.images.find((data: any) => data.mimeType === 'image/x-exr');
 
-    if (image.length > 0) {
-      var bufferPromises = glb.parser.getDependency("bufferView", image[0].bufferView);
-
-      var that = this;
-      return bufferPromises.then(function (buffer: any) {
-        var texData = (buffer);
-        var texture = new THREE.DataTexture();
-
-        texture.image.data = texData.data;
-        texture.source.data.width = texData.width;
-        texture.source.data.height = texData.height;
+    if (image) {
+      return glb.parser.getDependency('bufferView', image.bufferView).then((buffer: any) => {
+        const texData = buffer;
+        const texture = new THREE.DataTexture(texData.data, texData.width, texData.height, texData.format, texData.type);
+        
         texture.mapping = THREE.EquirectangularReflectionMapping;
-
-        texture.format = texData.format;
-        texture.type = texData.type;
         texture.colorSpace = THREE.LinearSRGBColorSpace;
         texture.minFilter = THREE.LinearFilter;
         texture.magFilter = THREE.LinearFilter;
         texture.generateMipmaps = false;
         texture.flipY = false;
-
         texture.needsUpdate = true;
-       that.pmremGenerator = new THREE.PMREMGenerator(that.renderer); 
-        var envMap = that.pmremGenerator.fromEquirectangular(texture)
+
+        this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+        const envMap = this.pmremGenerator.fromEquirectangular(texture);
         return envMap;
       });
     }
+
+    return Promise.reject('No EXR image found in the GLTF file');
   }
 }

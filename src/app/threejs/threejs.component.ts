@@ -34,7 +34,7 @@ export class ThreejsComponent implements OnInit {
 
     var that = this;
 
-    this.gltfLoader.load('assets/carton_for_torben.glb', (glb) => {
+    this.gltfLoader.load('assets/carton_for_torben_with_exr.glb', (glb) => {
       this.scene.add(glb.scene);
       this.scene.add(new THREE.AmbientLight())
 

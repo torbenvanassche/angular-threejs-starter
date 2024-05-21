@@ -14,7 +14,7 @@ import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader'
 })
 export class ThreejsComponent implements OnInit {
   scene: THREE.Scene = new THREE.Scene();
-  renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer();
+  renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({alpha: true});
   controls?: OrbitControls;
 
   gltfLoader: GLTFLoader = new GLTFLoader()
@@ -38,6 +38,12 @@ export class ThreejsComponent implements OnInit {
       this.scene.add(glb.scene);
       this.scene.add(new THREE.AmbientLight())
 
+      let userData = glb.scene.userData;
+      let bgColor = userData["gltfExtensions"].HYB_scene_background;
+      let topColor = this.normalizedRgbArrayToHex(bgColor.topcolor);
+      let bottomColor = this.normalizedRgbArrayToHex(bgColor.bottomcolor);
+      this.renderer.domElement.style.backgroundImage = "linear-gradient(" + topColor + ", " + bottomColor + ")";
+
       // Set up OrbitControls
       this.controls = new OrbitControls(glb.cameras[0], this.renderer.domElement);
       this.loadEXRFromGLB(glb).then(function(env: any) {
@@ -57,6 +63,14 @@ export class ThreejsComponent implements OnInit {
       this.renderer.setSize(window.innerWidth, window.innerHeight)
     });
   }
+
+  normalizedRgbArrayToHex(normalizedRgbArray: number[]) {
+    return '#' + normalizedRgbArray.map(num => {
+        let intVal = Math.round(num * 255);
+        let hex = intVal.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+}
 
   // Animation loop
   private animate = () => {

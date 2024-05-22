@@ -14,7 +14,7 @@ import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader'
 })
 export class ThreejsComponent implements OnInit {
   scene: THREE.Scene = new THREE.Scene();
-  renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({alpha: true});
+  renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
   controls?: OrbitControls;
 
   gltfLoader: GLTFLoader = new GLTFLoader()
@@ -24,6 +24,12 @@ export class ThreejsComponent implements OnInit {
 
   ngOnInit(): void {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.toneMapping = THREE.LinearToneMapping;
+    this.renderer.toneMappingExposure = 0.75;
+    this.renderer.shadowMap.type =THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.setPixelRatio(window.devicePixelRatio)
+
     document.body.appendChild(this.renderer.domElement);
 
     this.dracoLoader.setDecoderPath('/assets/draco/')
@@ -34,7 +40,7 @@ export class ThreejsComponent implements OnInit {
 
     var that = this;
 
-    this.gltfLoader.load('assets/carton_for_torben_with_exr.glb', (glb) => {
+    this.gltfLoader.load('assets/carton_for_torben.glb', (glb) => {
       this.scene.add(glb.scene);
       this.scene.add(new THREE.AmbientLight())
 
@@ -84,7 +90,7 @@ export class ThreejsComponent implements OnInit {
 
     if (image) {
       return glb.parser.getDependency('bufferView', image.bufferView).then((buffer: any) => {
-        const texData = buffer;
+        const texData = new EXRLoader().parse(buffer);
         const texture = new THREE.DataTexture(texData.data, texData.width, texData.height, texData.format, texData.type);
         
         texture.mapping = THREE.EquirectangularReflectionMapping;

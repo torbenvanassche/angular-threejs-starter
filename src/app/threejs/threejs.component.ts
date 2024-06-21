@@ -5,7 +5,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
-import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader'
+import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader';
+import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass';
+import { GUI} from 'three/examples/jsm/libs/lil-gui.module.min'
 
 @Component({
   selector: 'app-threejs',
@@ -52,6 +54,11 @@ export class ThreejsComponent implements OnInit {
 
       // Set up OrbitControls
       this.controls = new OrbitControls(glb.cameras[0], this.renderer.domElement);
+      this.controls.target = new THREE.Box3().setFromObject(glb.scene).getCenter(new THREE.Vector3());
+      this.controls.addEventListener('change', function() {
+        console.log("The camera controller detected a change!")
+      })
+
       this.loadEXRFromGLB(glb).then(function(env: any) {
         that.scene.environment = env.texture;
       });

@@ -8,6 +8,7 @@ import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader';
 import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass';
 import { GUI} from 'three/examples/jsm/libs/lil-gui.module.min'
+import { WebGLPathTracer } from 'three-gpu-pathtracer';
 
 @Component({
   selector: 'app-threejs',
@@ -23,6 +24,7 @@ export class ThreejsComponent implements OnInit {
   dracoLoader: DRACOLoader = new DRACOLoader();
   ktx: KTX2Loader = new KTX2Loader();
   pmremGenerator: THREE.PMREMGenerator | undefined = undefined;
+  pathTracer!: WebGLPathTracer;
 
   ngOnInit(): void {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -59,6 +61,13 @@ export class ThreejsComponent implements OnInit {
         console.log("The camera controller detected a change!")
       })
 
+      this.pathTracer.setScene(this.scene, glb.cameras[0]);
+
+      let dirLight = new THREE.DirectionalLight();
+      dirLight.position.set(glb.cameras[0].position.x, glb.cameras[0].position.y, glb.cameras[0].position.z);
+      dirLight.lookAt(glb.scene.position)
+
+
       this.loadEXRFromGLB(glb).then(function(env: any) {
         that.scene.environment = env.texture;
       });
@@ -75,6 +84,8 @@ export class ThreejsComponent implements OnInit {
       (this.controls!.object! as THREE.PerspectiveCamera).updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight)
     });
+
+    this.pathTracer = new WebGLPathTracer(this.renderer)
   }
 
   normalizedRgbArrayToHex(normalizedRgbArray: number[]) {
@@ -89,6 +100,7 @@ export class ThreejsComponent implements OnInit {
   private animate = () => {
     if (this.controls) {
       this.renderer.render(this.scene, (this.controls!.object! as THREE.PerspectiveCamera));
+      this.pathTracer.renderSample();
     }
   }
 
